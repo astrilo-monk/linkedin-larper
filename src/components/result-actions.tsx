@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { AnalysisResult } from "@/lib/types";
 import { generateShareText, copyToClipboard } from "@/lib/utils";
@@ -82,7 +83,7 @@ export function ResultActions({ result, resultId }: ResultActionsProps) {
       >
         {downloading ? "Saving..." : "Download Image"}
       </Button>
-      <a href="/">
+      <Link href="/">
         <Button
           variant="outline"
           size="sm"
@@ -90,7 +91,7 @@ export function ResultActions({ result, resultId }: ResultActionsProps) {
         >
           Analyze Another
         </Button>
-      </a>
+      </Link>
     </div>
   );
 }

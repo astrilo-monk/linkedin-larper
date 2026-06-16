@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ScoreDisplay } from "@/components/score-display";
@@ -68,12 +69,12 @@ export function ResultPageClient({ id }: ResultPageClientProps) {
           {error && (
             <div className="flex flex-col items-center py-20">
               <p className="text-neutral-400 mb-4">{error}</p>
-              <a
+              <Link
                 href="/"
                 className="text-amber-500 underline underline-offset-4 hover:text-amber-400 font-mono text-sm"
               >
                 Analyze a profile →
-              </a>
+              </Link>
             </div>
           )}
 
@@ -99,12 +100,12 @@ export function ResultPageClient({ id }: ResultPageClientProps) {
 
               {/* CTA */}
               <div className="pt-4 text-center">
-                <a
+                <Link
                   href="/"
                   className="text-sm text-neutral-500 hover:text-neutral-300 font-mono transition-colors"
                 >
                   Think you can do worse? →
-                </a>
+                </Link>
               </div>
             </div>
           )}
