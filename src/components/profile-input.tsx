@@ -36,38 +36,20 @@ export function ProfileInput({ mode, onAnalyze, isLoading }: ProfileInputProps) 
 
   return (
     <div className="space-y-4">
-      {mode === "quick" ? (
+      <div className="relative">
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder='Chief Synergy Officer | AI Whisperer | Building the Future™'
+          placeholder={mode === "quick" ? "Paste your LinkedIn post here..." : "Paste your full LinkedIn profile here... About section, experience, the works."}
           disabled={isLoading}
           maxLength={limits.max}
-          rows={2}
-          className="w-full resize-y rounded-md border border-neutral-700 bg-neutral-900 px-4 py-3 font-mono text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-colors"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && isValid && !isLoading) {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
+          rows={8}
+          className="resize-none border-neutral-700 bg-neutral-900 font-mono text-sm placeholder:text-neutral-600 focus:border-amber-500 focus:ring-amber-500/50"
         />
-      ) : (
-        <div className="relative">
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Paste your full LinkedIn profile here... About section, experience, the works."
-            disabled={isLoading}
-            maxLength={limits.max}
-            rows={8}
-            className="resize-none border-neutral-700 bg-neutral-900 font-mono text-sm placeholder:text-neutral-600 focus:border-amber-500 focus:ring-amber-500/50"
-          />
-          <span className="absolute bottom-2 right-3 text-xs text-neutral-600">
-            {text.length.toLocaleString()} / {limits.max.toLocaleString()}
-          </span>
-        </div>
-      )}
+        <span className="absolute bottom-2 right-3 text-xs text-neutral-600">
+          {text.length.toLocaleString()} / {limits.max.toLocaleString()}
+        </span>
+      </div>
 
       <div className="flex items-center gap-3">
         <Button

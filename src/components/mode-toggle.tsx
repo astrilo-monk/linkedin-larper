@@ -22,7 +22,7 @@ export function ModeToggle({ mode, onChange, disabled }: ModeToggleProps) {
             : "text-neutral-400 hover:text-neutral-200"
         )}
       >
-        Quick Scan
+        Post Scan
       </button>
       <button
         onClick={() => onChange("deep")}
@@ -34,7 +34,7 @@ export function ModeToggle({ mode, onChange, disabled }: ModeToggleProps) {
             : "text-neutral-400 hover:text-neutral-200"
         )}
       >
-        Deep Scan
+        Profile Scan
       </button>
     </div>
   );

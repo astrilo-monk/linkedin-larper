@@ -91,7 +91,7 @@ export default function HomePage() {
                   />
                   <p className="text-xs text-neutral-600 mt-2 font-mono">
                     {mode === "quick"
-                      ? "Paste a headline. Fast results."
+                      ? "Paste your post for analysis."
                       : "Paste your full profile for deep analysis."}
                   </p>
                 </div>

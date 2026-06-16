@@ -57,7 +57,7 @@ export const BREAKDOWN_LABELS: Record<string, { label: string; description: stri
 };
 
 export const INPUT_LIMITS = {
-  quick: { min: 5, max: 300 },
+  quick: { min: 5, max: 10000 },
   deep: { min: 50, max: 10000 },
 } as const;
 

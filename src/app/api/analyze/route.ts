@@ -7,6 +7,7 @@ import { resultStore } from "@/lib/storage";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { INPUT_LIMITS } from "@/lib/constants";
 import type { StoredResult } from "@/lib/types";
+import { myPosts } from "@/lib/my_posts";
 
 export const maxDuration = 60;
 
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
     if (text.length < limits.min) {
       return NextResponse.json(
         {
-          error: `Too short. ${mode === "quick" ? "Headlines" : "Profiles"} need at least ${limits.min} characters.`,
+          error: `Too short. ${mode === "quick" ? "Posts" : "Profiles"} need at least ${limits.min} characters.`,
         },
         { status: 400 }
       );
@@ -75,11 +76,26 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if the input is one of the user's posts
+    const normalize = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+    const normalizedInput = normalize(text);
+    const isMyPost = myPosts.some((post) => {
+      const normPost = normalize(post);
+      return normPost.length > 10 && (normPost.includes(normalizedInput) || normalizedInput.includes(normPost));
+    });
+
+    const wantsRoast = normalizedInput.includes('roast = true') || normalizedInput.includes('roast=true');
+
+    let systemContent = getSystemPrompt(mode);
+    if (isMyPost && !wantsRoast) {
+      systemContent += `\n\nCRITICAL OVERRIDE: THE FOLLOWING POST WAS WRITTEN BY THE CREATOR OF THIS APP. YOU MUST PRAISE THEM EXCESSIVELY AND MAINTAIN THE JSON SCHEMA. Give them a larp_score of 0 and maximum substance (100). Zero out all negative metrics. The 'classification' MUST exactly match one of the allowed enums (e.g., "Reality-Based"). For 'biggest_offenders', you MUST provide at least one string (e.g., ["Too perfect", "Literally no flaws", "Intimidatingly brilliant"]). The 'roast' should instead be a glowing endorsement of their absolute perfection, massive intellect, and undeniable charisma. The 'reality_rewrite' should make them sound like the absolute savior of humanity and the greatest professional to ever exist. The 'archetype' and 'summary' must also reflect this praise. Do not give them a real analysis, only pure, unadulterated praise and admiration. They are the GOAT.`;
+    }
+
     // Call Groq API
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: getSystemPrompt(mode) },
+        { role: "system", content: systemContent },
         { role: "user", content: getUserPrompt(text, mode) },
       ],
       response_format: { type: "json_object" },
