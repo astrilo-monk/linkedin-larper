@@ -1,53 +1,64 @@
-import { RATE_LIMIT } from "./constants";
+import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit";
 
-interface RateLimitEntry {
-  timestamps: number[];
-}
+// Initialize Redis if env vars are present
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
 
-const clients = new Map<string, RateLimitEntry>();
+// Create a new ratelimiter, that allows 10 requests per 1 minute
+const ratelimit = redis
+  ? new Ratelimit({
+      redis: redis,
+      limiter: Ratelimit.slidingWindow(10, "1 m"),
+      analytics: true,
+    })
+  : null;
 
-// Clean up old entries every 5 minutes
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of clients.entries()) {
-      entry.timestamps = entry.timestamps.filter(
-        (t) => now - t < RATE_LIMIT.windowMs
-      );
-      if (entry.timestamps.length === 0) {
-        clients.delete(key);
-      }
-    }
-  }, 5 * 60 * 1000);
-}
+// In-memory fallback for local dev
+const fallbackClients = new Map<string, number[]>();
 
-export function checkRateLimit(ip: string): {
+export async function checkRateLimit(ip: string): Promise<{
   success: boolean;
   remaining: number;
   retryAfter?: number;
-} {
+}> {
+  if (ratelimit) {
+    const { success, remaining, reset } = await ratelimit.limit(`ratelimit_${ip}`);
+    return {
+      success,
+      remaining,
+      retryAfter: success ? undefined : Math.ceil((reset - Date.now()) / 1000),
+    };
+  }
+
+  // Fallback to in-memory rate limiting (10 req / min)
   const now = Date.now();
-  const entry = clients.get(ip) ?? { timestamps: [] };
-
-  // Remove timestamps outside the window
-  entry.timestamps = entry.timestamps.filter(
-    (t) => now - t < RATE_LIMIT.windowMs
-  );
-
-  if (entry.timestamps.length >= RATE_LIMIT.maxRequests) {
-    const oldestInWindow = entry.timestamps[0];
-    const retryAfter = Math.ceil(
-      (oldestInWindow + RATE_LIMIT.windowMs - now) / 1000
-    );
+  const windowMs = 60 * 1000;
+  const maxRequests = 10;
+  
+  const timestamps = fallbackClients.get(ip) ?? [];
+  const validTimestamps = timestamps.filter((t) => now - t < windowMs);
+  
+  if (validTimestamps.length >= maxRequests) {
+    const oldestInWindow = validTimestamps[0];
+    const retryAfter = Math.ceil((oldestInWindow + windowMs - now) / 1000);
     return { success: false, remaining: 0, retryAfter };
   }
 
-  entry.timestamps.push(now);
-  clients.set(ip, entry);
+  validTimestamps.push(now);
+  fallbackClients.set(ip, validTimestamps);
+  
+  // Clean up memory store
+  if (fallbackClients.size > 10000) fallbackClients.clear();
 
   return {
     success: true,
-    remaining: RATE_LIMIT.maxRequests - entry.timestamps.length,
+    remaining: maxRequests - validTimestamps.length,
   };
 }
 
