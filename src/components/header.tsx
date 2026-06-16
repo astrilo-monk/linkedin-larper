@@ -8,12 +8,12 @@ export function Header() {
           LARPIn
         </Link>
         <a
-          href="https://github.com/astrilo-monk/linkedin-larper"
+          href="https://www.linkedin.com/in/astrilo/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-neutral-500 transition-colors hover:text-neutral-300"
         >
-          GitHub
+          LinkedIn
         </a>
       </div>
     </header>
